@@ -10,7 +10,7 @@
     "@actions/core": "^1.2.4",
     "@actions/github": "^4.0.0",
     "@octokit/webhooks": "^7.9.3",
-    "@types/jest": "^26.0.9",
+    "@types/jest": "^29.5.12",
     "codeowners": "^4.2.0"
   }
 }
