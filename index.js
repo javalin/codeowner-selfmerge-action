@@ -296,10 +296,10 @@ class Actor {
     try {
       const coauthor = `Co-authored-by: ${sender} <${sender}@users.noreply.github.com>`;
       // @ts-ignore
-      await octokit.pulls.merge({
+      await octokit.rest.pulls.merge({
         ...thisRepo,
         pull_number: issue.number,
-        merge_method: core.getInput("merge_method") || "merge",
+        merge_method: core.getInput("merge_method") || "squash",
         commit_message: coauthor,
       });
       await octokit.rest.issues.createComment({
