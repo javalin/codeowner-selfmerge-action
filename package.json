@@ -11,6 +11,6 @@
     "@actions/github": "^4.0.0",
     "@octokit/webhooks": "^7.9.3",
     "@types/jest": "^26.0.9",
-    "codeowners": "^4.2.0"
+    "codeowners": "^5.1.1"
   }
 }
