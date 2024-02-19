@@ -1,6 +1,6 @@
-name: 'Code Owner Self Merge'
-description: 'Lets the CODEOWNERS file determine who can merge a PR'
-author: 'Orta Therox'
+name: "Code Owner Self Merge"
+description: "Lets the CODEOWNERS file determine who can merge a PR"
+author: "Orta Therox"
 
 branding:
   icon: git-merge
@@ -8,30 +8,30 @@ branding:
 
 inputs:
   cwd:
-    description: 'The path to the root folder where it should look for code owners'
-    default: ''
+    description: "The path to the root folder where it should look for code owners"
+    default: ""
     required: false
 
   merge_method:
     description: "The merge strategy to use: 'merge', 'squash' or 'rebase'"
-    default: 'merge'
+    default: "squash"
     required: false
 
   if_no_maintainers_add_label:
     description: "If a PR does not have any community maintainers, apply this label"
-    default: ''
+    default: ""
     required: false
-    
+
   if_no_maintainers_assign:
     description: 'If a PR does not have any community maintainers, assign these people (e.g. "@orta @sandersn")'
-    default: ''
+    default: ""
     required: false
 
   quiet:
     description: 'Do not say "this PR can be merged by x, y, z" out loud'
-    default: ''
+    default: ""
     required: false
 
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: "node20"
+  main: "index.js"
