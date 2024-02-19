@@ -1,13 +1,13 @@
 // @ts-check
 
-const { context, getOctokit } = require("@actions/github");
-const core = require("@actions/core");
-const Codeowners = require("codeowners");
-const { readFileSync } = require("fs");
+import { context, getOctokit } from "@actions/github";
+import { info, getInput, error as _error, setFailed } from "@actions/core";
+import Codeowners from "codeowners";
+import { readFileSync } from "fs";
 
 // Effectively the main function
 async function run() {
-  core.info("Running version 1.6.5");
+  info("Running version 1.6.5");
 
   // Tell folks they can merge
   if (context.eventName === "pull_request_target") {
@@ -40,24 +40,30 @@ async function commentOnMergablePRs() {
   }
 
   // Setup
-  const cwd = core.getInput("cwd") || process.cwd();
-  const octokit = getOctokit(process.env.GITHUB_TOKEN);
+  const cwd = getInput("cwd") || process.cwd();
+  const githubToken = process.env.GITHUB_TOKEN;
+  if (!githubToken) {
+    throw new Error(
+      "GITHUB_TOKEN is not defined in the environment variables."
+    );
+  }
+  const octokit = getOctokit(githubToken);
   const pr = context.payload.pull_request;
   const thisRepo = { owner: context.repo.owner, repo: context.repo.repo };
 
-  core.info(
+  info(
     `\nLooking at PR: '${pr.title}' to see if the changed files all fit inside one set of code-owners to make a comment`
   );
 
   const co = new Codeowners(cwd);
-  core.info(`Code-owners file found at: ${co.codeownersFilePath}`);
+  info(`Code-owners file found at: ${co.codeownersFilePath}`);
 
   const changedFiles = await getPRChangedFiles(octokit, thisRepo, pr.number);
-  core.info(`Changed files: \n - ${changedFiles.join("\n - ")}`);
+  info(`Changed files: \n - ${changedFiles.join("\n - ")}`);
 
   const codeowners = findCodeOwnersForChangedFiles(changedFiles, cwd);
-  core.info(`Code-owners: \n - ${codeowners.users.join("\n - ")}`);
-  core.info(`Labels: \n - ${codeowners.labels.join("\n - ")}`);
+  info(`Code-owners: \n - ${codeowners.users.join("\n - ")}`);
+  info(`Labels: \n - ${codeowners.labels.join("\n - ")}`);
 
   if (!codeowners.users.length) {
     console.log("This PR does not have any code-owners");
@@ -82,7 +88,7 @@ async function commentOnMergablePRs() {
     );
     listFilesWithOwners(changedFiles, cwd);
 
-    const labelToAdd = core.getInput("if_no_maintainers_add_label");
+    const labelToAdd = getInput("if_no_maintainers_add_label");
     if (labelToAdd) {
       const labelConfig = {
         name: labelToAdd,
@@ -95,7 +101,7 @@ async function commentOnMergablePRs() {
       );
     }
 
-    const assignees = core.getInput("if_no_maintainers_assign");
+    const assignees = getInput("if_no_maintainers_assign");
     if (assignees) {
       const usernames = assignees
         .split(" ")
@@ -131,7 +137,7 @@ async function commentOnMergablePRs() {
 This section of the codebase is owned by ${owners} - if they write a comment saying "LGTM" then it will be merged.
 ${ourSignature}`;
 
-  const skipOutput = core.getInput("quiet");
+  const skipOutput = getInput("quiet");
   if (!skipOutput) {
     await octokit.issues.createComment({
       ...thisRepo,
@@ -180,7 +186,7 @@ function getPayloadBody() {
 
 class Actor {
   constructor() {
-    this.cwd = core.getInput("cwd") || process.cwd();
+    this.cwd = getInput("cwd") || process.cwd();
     this.octokit = getOctokit(process.env.GITHUB_TOKEN);
     this.thisRepo = { owner: context.repo.owner, repo: context.repo.repo };
     this.issue = context.payload.issue || context.payload.pull_request;
@@ -190,7 +196,7 @@ class Actor {
 
   async getTargetPRIfHasAccess() {
     const { octokit, thisRepo, sender, issue, cwd } = this;
-    core.info(
+    info(
       `\n\nLooking at the ${context.eventName} from ${sender} in '${issue.title}' to see if we can proceed`
     );
 
@@ -199,7 +205,7 @@ class Actor {
       thisRepo,
       issue.number
     );
-    core.info(`Changed files: \n - ${changedFiles.join("\n - ")}`);
+    info(`Changed files: \n - ${changedFiles.join("\n - ")}`);
 
     const filesWhichArentOwned = getFilesNotOwnedByCodeOwner(
       "@" + sender,
@@ -278,14 +284,14 @@ class Actor {
       return;
     }
 
-    core.info(`Creating comments and merging`);
+    info(`Creating comments and merging`);
     try {
       const coauthor = `Co-authored-by: ${sender} <${sender}@users.noreply.github.com>`;
       // @ts-ignore
       await octokit.pulls.merge({
         ...thisRepo,
         pull_number: issue.number,
-        merge_method: core.getInput("merge_method") || "merge",
+        merge_method: getInput("merge_method") || "merge",
         commit_message: coauthor,
       });
       await octokit.issues.createComment({
@@ -294,9 +300,9 @@ class Actor {
         body: `Merging because @${sender} is a code-owner of all the changes - thanks!`,
       });
     } catch (error) {
-      core.info(`Merging (or commenting) failed:`);
-      core.error(error);
-      core.setFailed("Failed to merge");
+      info(`Merging (or commenting) failed:`);
+      _error(error);
+      setFailed("Failed to merge");
 
       const linkToCI = `https://github.com/${thisRepo.owner}/${thisRepo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}?check_suite_focus=true`;
       await octokit.issues.createComment({
@@ -315,7 +321,7 @@ class Actor {
 
     const { octokit, thisRepo, issue, sender } = this;
 
-    core.info(`Creating comments and closing`);
+    info(`Creating comments and closing`);
     await octokit.issues.update({
       ...thisRepo,
       issue_number: issue.number,
@@ -333,7 +339,7 @@ class Actor {
 
     const { octokit, thisRepo, issue, sender } = this;
 
-    core.info(`Creating comments and reopening`);
+    info(`Creating comments and reopening`);
     await octokit.issues.update({
       ...thisRepo,
       issue_number: issue.number,
@@ -466,7 +472,7 @@ async function createOrAddLabel(octokit, repoDeets, labelConfig) {
 }
 
 // For tests
-module.exports = {
+export default {
   getFilesNotOwnedByCodeOwner,
   findCodeOwnersForChangedFiles,
   githubLoginIsInCodeowners,
@@ -477,14 +483,14 @@ if (!module.parent) {
   try {
     run();
   } catch (error) {
-    core.setFailed(error.message);
+    setFailed(error.message);
     throw error;
   }
 }
 
 // Bail correctly
 process.on("uncaughtException", function (err) {
-  core.setFailed(err.message);
+  setFailed(err.message);
   console.error(new Date().toUTCString() + " uncaughtException:", err.message);
   console.error(err.stack);
   process.exit(1);
