@@ -46,14 +46,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Run Codeowners merge check
-        uses: OSS-Docs-Tools/code-owner-self-merge@1.6.5
+        uses: javalin/codeowner-selfmerge-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Then you should be good to go. Note that I might not have bumped the version in `^`, so double [check the releases.](https://github.com/OSS-Docs-Tools/code-owner-self-merge/releases)
+Then you should be good to go. No version releases are made, so you can use `@master` to get the latest version or use a specific commit hash.
 
 ### Security
 
@@ -91,12 +91,12 @@ packages/documentation/copy/es/**/*.ts @KingDarBoja [translate] [es]
 There are five options available at the moment:
 
 - `cwd`, which can be used to determine the root folder to look for CODEOWNER files in.
-- `merge_method`, which can be `merge` (default), `squash` or `rebase`, depending on what you want the action to do.
+- `merge_method`, which can be `merge` , `squash` (default) or `rebase`, depending on what you want the action to do.
 - `quiet` - does not output a message saying who can merge PRs
 
 ```yml
 - name: Run Codeowners merge check
-  uses: OSS-Docs-Tools/code-owner-self-merge@v1
+  uses: javalin/codeowner-selfmerge-action@master
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
@@ -111,7 +111,7 @@ Then 2 for handling fallbacks on PRs which aren't able to be maintained by anyon
 
 ```yml
 - name: Run Codeowners merge check
-  uses: OSS-Docs-Tools/code-owner-self-merge@v1
+  uses: javalin/codeowner-selfmerge-action@master
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
