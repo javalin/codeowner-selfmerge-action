@@ -133,7 +133,7 @@ async function commentOnMergablePRs() {
     process.exit(0);
   }
 
-  const owners = ownersWhoHaveAccessToAllFilesInPR.join(', ');
+  const owners = ownersWhoHaveAccessToAllFilesInPR.join(", ");
   const message = `Thanks for the PR!
 
 This section of the codebase is owned by ${owners} - if they write a comment saying "LGTM" then it will be merged.
@@ -413,7 +413,7 @@ function listFilesWithOwners(files, cwd) {
   for (const file of files) {
     const relative = file.startsWith("/") ? file.slice(1) : file;
     let owners = codeowners.getOwner(relative);
-    console.log(`- ${file} (${owners.join(', ')})`);
+    console.log(`- ${file} (${owners.join(", ")})`);
   }
   console.log("\n> CODEOWNERS file:");
   console.log(readFileSync(codeowners.codeownersFilePath, "utf8"));
@@ -441,7 +441,7 @@ function findCodeOwnersForChangedFiles(changedFiles, cwd) {
 
 async function getPRChangedFiles(octokit, repoDeets, prNumber) {
   // https://developer.github.com/v3/pulls/#list-pull-requests-files
-  const options = octokit.pulls.listFiles.endpoint.merge({
+  const options = octokit.rest.pulls.listFiles.endpoint.merge({
     ...repoDeets,
     pull_number: prNumber,
   });
@@ -462,7 +462,7 @@ async function createOrAddLabel(octokit, repoDeets, labelConfig) {
 
   // Create the label if it doesn't exist yet
   if (!label) {
-    await octokit.issues.createLabel({
+    await octokit.rest.issues.createLabel({
       owner: repoDeets.owner,
       repo: repoDeets.repo,
       name: labelConfig.name,
@@ -471,7 +471,7 @@ async function createOrAddLabel(octokit, repoDeets, labelConfig) {
     });
   }
 
-  await octokit.issues.addLabels({
+  await octokit.rest.issues.addLabels({
     owner: repoDeets.owner,
     repo: repoDeets.repo,
     issue_number: repoDeets.id,
